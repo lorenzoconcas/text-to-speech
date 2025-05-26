@@ -32,6 +32,12 @@ export interface TextToSpeechPlugin {
     eventName: 'onRangeStart',
     listenerFunc: (info: { start: number; end: number; spokenWord: string }) => void,
   ): Promise<PluginListenerHandle>;
+
+
+  addListener(
+      eventName: 'onDone',
+      listenerFunc: (data: { utteranceId?: string }) => void
+    ): Promise<PluginListenerHandle>;
 }
 
 export enum QueueStrategy {

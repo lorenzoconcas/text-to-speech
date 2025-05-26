@@ -33,37 +33,40 @@ public class TextToSpeech implements android.speech.tts.TextToSpeech.OnInitListe
         try {
             tts = new android.speech.tts.TextToSpeech(context, this);
             tts.setOnUtteranceProgressListener(
-                new UtteranceProgressListener() {
-                    @Override
-                    public void onStart(String utteranceId) {}
-
-                    @Override
-                    public void onDone(String utteranceId) {
-                        SpeakResultCallback callback = requests.get(utteranceId);
-                        if (callback != null) {
-                            callback.onDone();
-                            requests.remove(utteranceId);
+                    new UtteranceProgressListener() {
+                        @Override
+                        public void onStart(String utteranceId) {
                         }
-                    }
 
-                    @Override
-                    public void onError(String utteranceId) {
-                        SpeakResultCallback callback = requests.get(utteranceId);
-                        if (callback != null) {
-                            callback.onError();
-                            requests.remove(utteranceId);
+                        @Override
+                        public void onDone(String utteranceId) {
+                            SpeakResultCallback callback = requests.get(utteranceId);
+                            if (callback != null) {
+                                callback.onDone();
+                                requests.remove(utteranceId);
+                                JSObject ret = new JSObject();
+                                // se vuoi restituire l'ID: ret.put("utteranceId", id);
+                                notifyListeners("onDone", ret, true);
+                            }
                         }
-                    }
 
-                    @Override
-                    public void onRangeStart(String utteranceId, int start, int end, int frame) {
-                        SpeakResultCallback callback = requests.get(utteranceId);
-                        if (callback != null) {
-                            callback.onRangeStart(start, end);
+                        @Override
+                        public void onError(String utteranceId) {
+                            SpeakResultCallback callback = requests.get(utteranceId);
+                            if (callback != null) {
+                                callback.onError();
+                                requests.remove(utteranceId);
+                            }
                         }
-                    }
-                }
-            );
+
+                        @Override
+                        public void onRangeStart(String utteranceId, int start, int end, int frame) {
+                            SpeakResultCallback callback = requests.get(utteranceId);
+                            if (callback != null) {
+                                callback.onRangeStart(start, end);
+                            }
+                        }
+                    });
         } catch (Exception ex) {
             Log.d(LOG_TAG, ex.getLocalizedMessage());
         }
@@ -75,29 +78,28 @@ public class TextToSpeech implements android.speech.tts.TextToSpeech.OnInitListe
     }
 
     public void speak(
-        String text,
-        String lang,
-        float rate,
-        float pitch,
-        float volume,
-        int voice,
-        String callbackId,
-        SpeakResultCallback resultCallback
-    ) {
-        speak(text, lang, rate, pitch, volume, voice, callbackId, resultCallback, android.speech.tts.TextToSpeech.QUEUE_FLUSH);
+            String text,
+            String lang,
+            float rate,
+            float pitch,
+            float volume,
+            int voice,
+            String callbackId,
+            SpeakResultCallback resultCallback) {
+        speak(text, lang, rate, pitch, volume, voice, callbackId, resultCallback,
+                android.speech.tts.TextToSpeech.QUEUE_FLUSH);
     }
 
     public void speak(
-        String text,
-        String lang,
-        float rate,
-        float pitch,
-        float volume,
-        int voice,
-        String callbackId,
-        SpeakResultCallback resultCallback,
-        int queueStrategy
-    ) {
+            String text,
+            String lang,
+            float rate,
+            float pitch,
+            float volume,
+            int voice,
+            String callbackId,
+            SpeakResultCallback resultCallback,
+            int queueStrategy) {
         if (queueStrategy != android.speech.tts.TextToSpeech.QUEUE_ADD) {
             stop();
         }
@@ -140,7 +142,8 @@ public class TextToSpeech implements android.speech.tts.TextToSpeech.OnInitListe
     }
 
     /**
-     * @return Ordered list of voices. The order is guaranteed to remain the same as long as the voices in tts.getVoices() do not change.
+     * @return Ordered list of voices. The order is guaranteed to remain the same as
+     *         long as the voices in tts.getVoices() do not change.
      */
     public ArrayList<Voice> getSupportedVoicesOrdered() {
         Set<Voice> supportedVoices = tts.getVoices();
@@ -149,7 +152,7 @@ public class TextToSpeech implements android.speech.tts.TextToSpeech.OnInitListe
             orderedVoices.add(supportedVoice);
         }
 
-        //voice.getName() is guaranteed to be unique, so will be used for sorting.
+        // voice.getName() is guaranteed to be unique, so will be used for sorting.
         Collections.sort(orderedVoices, (v1, v2) -> v1.getName().compareTo(v2.getName()));
 
         return orderedVoices;
@@ -189,7 +192,8 @@ public class TextToSpeech implements android.speech.tts.TextToSpeech.OnInitListe
     public boolean isLanguageSupported(String lang) {
         Locale locale = Locale.forLanguageTag(lang);
         int result = tts.isLanguageAvailable(locale);
-        return result == tts.LANG_AVAILABLE || result == tts.LANG_COUNTRY_AVAILABLE || result == tts.LANG_COUNTRY_VAR_AVAILABLE;
+        return result == tts.LANG_AVAILABLE || result == tts.LANG_COUNTRY_AVAILABLE
+                || result == tts.LANG_COUNTRY_VAR_AVAILABLE;
     }
 
     public void onDestroy() {
