@@ -83,6 +83,7 @@ const isLanguageSupported = async (lang: string) => {
 * [`isLanguageSupported(...)`](#islanguagesupported)
 * [`openInstall()`](#openinstall)
 * [`addListener('onRangeStart', ...)`](#addlisteneronrangestart-)
+* [`addListener('onDone', ...)`](#addlistenerondone-)
 * [Interfaces](#interfaces)
 * [Enums](#enums)
 
@@ -183,6 +184,22 @@ addListener(eventName: 'onRangeStart', listenerFunc: (info: { start: number; end
 | ------------------ | ----------------------------------------------------------------------------------- |
 | **`eventName`**    | <code>'onRangeStart'</code>                                                         |
 | **`listenerFunc`** | <code>(info: { start: number; end: number; spokenWord: string; }) =&gt; void</code> |
+
+**Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
+
+--------------------
+
+
+### addListener('onDone', ...)
+
+```typescript
+addListener(eventName: 'onDone', listenerFunc: (data: { utteranceId?: string; }) => void) => Promise<PluginListenerHandle>
+```
+
+| Param              | Type                                                      |
+| ------------------ | --------------------------------------------------------- |
+| **`eventName`**    | <code>'onDone'</code>                                     |
+| **`listenerFunc`** | <code>(data: { utteranceId?: string; }) =&gt; void</code> |
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
