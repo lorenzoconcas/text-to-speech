@@ -49,6 +49,8 @@ public class TextToSpeechPlugin extends Plugin {
         SpeakResultCallback resultCallback = new SpeakResultCallback() {
             @Override
             public void onDone() {
+                JSObject ret = new JSObject();
+                notifyListeners("onDone", ret);
                 call.resolve();
             }
 

@@ -18,6 +18,12 @@ const TextToSpeech = core.registerPlugin('TextToSpeech', {
     web: () => Promise.resolve().then(function () { return web; }).then((m) => new m.TextToSpeechWeb()),
 });
 
+function findWordEnd(text, from) {
+    let i = from;
+    while (i < text.length && !/\s/.test(text[i]))
+        i++;
+    return i;
+}
 class TextToSpeechWeb extends core.WebPlugin {
     constructor() {
         super();
@@ -30,22 +36,52 @@ class TextToSpeechWeb extends core.WebPlugin {
         }
     }
     async speak(options) {
-        if (!this.speechSynthesis) {
+        if (!this.speechSynthesis)
             this.throwUnsupportedError();
-        }
-        await this.stop();
-        const speechSynthesis = this.speechSynthesis;
-        const utterance = this.createSpeechSynthesisUtterance(options);
         return new Promise((resolve, reject) => {
-            utterance.onend = () => {
+            const u = this.createSpeechSynthesisUtterance(options);
+            /* onRangeStart → boundary ‘word’ */
+            u.onboundary = ev => {
+                if (ev.name !== 'word')
+                    return;
+                const start = ev.charIndex;
+                const end = typeof ev.charLength === 'number'
+                    ? start + ev.charLength
+                    : findWordEnd(options.text, start);
+                this.notifyListeners('onRangeStart', {
+                    start,
+                    end,
+                    spokenWord: options.text.slice(start, end),
+                });
+            };
+            /* fine utterance → onDone */
+            u.onend = () => {
+                this.notifyListeners('onDone', {});
                 resolve();
             };
-            utterance.onerror = (event) => {
-                reject(event);
-            };
-            speechSynthesis.speak(utterance);
+            u.onerror = ev => { var _a; return reject((_a = ev.error) !== null && _a !== undefined ? _a : ev); };
+            if (options.queueStrategy === 0 /* Flush */)
+                this.speechSynthesis.cancel();
+            this.speechSynthesis.speak(u);
         });
     }
+    /* public async speak(options: TTSOptions): Promise<void> {
+      if (!this.speechSynthesis) {
+        this.throwUnsupportedError();
+      }
+      await this.stop();
+      const speechSynthesis = this.speechSynthesis;
+      const utterance = this.createSpeechSynthesisUtterance(options);
+      return new Promise((resolve, reject) => {
+        utterance.onend = () => {
+          resolve();
+        };
+        utterance.onerror = (event: any) => {
+          reject(event);
+        };
+        speechSynthesis.speak(utterance);
+      });
+    } */
     async stop() {
         if (!this.speechSynthesis) {
             this.throwUnsupportedError();

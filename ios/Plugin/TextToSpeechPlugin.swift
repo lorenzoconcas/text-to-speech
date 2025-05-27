@@ -39,6 +39,12 @@ public class TextToSpeechPlugin: CAPPlugin {
         }
     }
 
+
+    /* @objc public func done(_ call: CAPPluginCall){
+            plugin?.notifyListeners("onDone", data: [:])   
+    }
+ */
+
     @objc public func stop(_ call: CAPPluginCall) {
         implementation.stop()
         call.resolve()

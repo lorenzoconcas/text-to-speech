@@ -47,7 +47,7 @@ enum QUEUE_STRATEGY: Int {
     }
 
     public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        plugin?.notifyListeners("onDone", data: [:])   
+    plugin?.notifyListeners("onDone", data: [:])   
         self.resolveCurrentCall()
     }
 

@@ -2,9 +2,17 @@ import { WebPlugin } from '@capacitor/core';
 
 import type { TextToSpeechPlugin, TTSOptions } from './definitions';
 
+function findWordEnd(text: string, from: number): number {
+  let i = from;
+  while (i < text.length && !/\s/.test(text[i])) i++;
+  return i;
+}
+
+
 export class TextToSpeechWeb extends WebPlugin implements TextToSpeechPlugin {
   private speechSynthesis: SpeechSynthesis | null = null;
   private supportedVoices: SpeechSynthesisVoice[] | undefined;
+
 
   constructor() {
     super();
@@ -17,6 +25,43 @@ export class TextToSpeechWeb extends WebPlugin implements TextToSpeechPlugin {
   }
 
   public async speak(options: TTSOptions): Promise<void> {
+    if (!this.speechSynthesis) this.throwUnsupportedError();
+
+    return new Promise<void>((resolve, reject) => {
+      const u = this.createSpeechSynthesisUtterance(options);
+
+      /* onRangeStart → boundary ‘word’ */
+      u.onboundary = ev => {
+        if (ev.name !== 'word') return;
+
+        const start = ev.charIndex;
+        const end =
+          typeof ev.charLength === 'number'
+            ? start + ev.charLength
+            : findWordEnd(options.text, start);
+
+        this.notifyListeners('onRangeStart', {
+          start,
+          end,
+          spokenWord: options.text.slice(start, end),
+        });
+      };
+
+      /* fine utterance → onDone */
+      u.onend = () => {
+        this.notifyListeners('onDone', {});
+        resolve();
+      };
+
+      u.onerror = ev => reject(ev.error ?? ev);
+
+      if (options.queueStrategy === 0 /* Flush */) this.speechSynthesis!.cancel();
+      this.speechSynthesis!.speak(u);
+    });
+  }
+
+
+  /* public async speak(options: TTSOptions): Promise<void> {
     if (!this.speechSynthesis) {
       this.throwUnsupportedError();
     }
@@ -32,7 +77,7 @@ export class TextToSpeechWeb extends WebPlugin implements TextToSpeechPlugin {
       };
       speechSynthesis.speak(utterance);
     });
-  }
+  } */
 
   public async stop(): Promise<void> {
     if (!this.speechSynthesis) {
