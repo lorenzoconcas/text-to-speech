@@ -44,9 +44,6 @@ public class TextToSpeech implements android.speech.tts.TextToSpeech.OnInitListe
                             if (callback != null) {
                                 callback.onDone();
                                 requests.remove(utteranceId);
-                                JSObject ret = new JSObject();
-                                // se vuoi restituire l'ID: ret.put("utteranceId", id);
-                                notifyListeners("onDone", ret, true);
                             }
                         }
 

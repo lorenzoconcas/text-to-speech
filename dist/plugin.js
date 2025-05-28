@@ -39,7 +39,6 @@ var capacitorTextToSpeech = (function (exports, core) {
                 this.throwUnsupportedError();
             return new Promise((resolve, reject) => {
                 const u = this.createSpeechSynthesisUtterance(options);
-                /* onRangeStart → boundary ‘word’ */
                 u.onboundary = ev => {
                     if (ev.name !== 'word')
                         return;
@@ -47,40 +46,26 @@ var capacitorTextToSpeech = (function (exports, core) {
                     const end = typeof ev.charLength === 'number'
                         ? start + ev.charLength
                         : findWordEnd(options.text, start);
+                    console.log("webtts  range");
                     this.notifyListeners('onRangeStart', {
                         start,
                         end,
                         spokenWord: options.text.slice(start, end),
                     });
                 };
-                /* fine utterance → onDone */
                 u.onend = () => {
+                    console.log("webtts done");
                     this.notifyListeners('onDone', {});
                     resolve();
                 };
                 u.onerror = ev => { var _a; return reject((_a = ev.error) !== null && _a !== undefined ? _a : ev); };
-                if (options.queueStrategy === 0 /* Flush */)
+                if (options.queueStrategy === 0)
                     this.speechSynthesis.cancel();
+                console.log("all things setted");
+                this.notifyListeners("started", {});
                 this.speechSynthesis.speak(u);
             });
         }
-        /* public async speak(options: TTSOptions): Promise<void> {
-          if (!this.speechSynthesis) {
-            this.throwUnsupportedError();
-          }
-          await this.stop();
-          const speechSynthesis = this.speechSynthesis;
-          const utterance = this.createSpeechSynthesisUtterance(options);
-          return new Promise((resolve, reject) => {
-            utterance.onend = () => {
-              resolve();
-            };
-            utterance.onerror = (event: any) => {
-              reject(event);
-            };
-            speechSynthesis.speak(utterance);
-          });
-        } */
         async stop() {
             if (!this.speechSynthesis) {
                 this.throwUnsupportedError();
